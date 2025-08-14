@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced Fake Data Generator — Multi-language & Multi-country</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --brand:#b48608; --brand-dark:#8f6d06; --bg:#f7f5ef; --card:#ffffff; --muted:#666;
+      --ok:#0e7a0d; --warn:#b85c00; --border:#eee; --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --dark-bg: #1a1a1a; --dark-card: #2d2d2d; --dark-text: #e0e0e0; --dark-border: #444;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(120deg,#f8f1e4 0%,#fff 60%, #f8f1e4 100%); color:#222; display:flex; justify-content:center; min-height:100vh;
+    }
+    body.dark-mode {
+      background: linear-gradient(120deg,var(--dark-bg) 0%,var(--dark-card) 60%, var(--dark-bg) 100%);
+      color: var(--dark-text);
+    }
+    .wrap{ width:100%; max-width:1080px; padding:28px 18px 56px; }
+    .hero{ background:var(--card); border-radius:14px; padding:22px 18px; box-shadow:0 10px 28px rgba(0,0,0,.08); border:1px solid var(--border); }
+    body.dark-mode .hero { background: var(--dark-card); border-color: var(--dark-border); }
+    .title{ margin:0; text-align:center; color:var(--brand); font-weight:800; letter-spacing:.2px; }
+    .subtitle{ margin:8px 0 0; text-align:center; color:var(--muted); }
+    body.dark-mode .subtitle { color: #aaa; }
+    .badges{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0 0}
+    .badge{ font-size:12px; color:#684; background:#fcf6e6; border:1px dashed #e9d8a6; padding:6px 10px; border-radius:999px; }
+    body.dark-mode .badge { background: #333; color: #ccc; border-color: #555; }
+
+    .grid{ display:grid; grid-template-columns:1fr; gap:16px; margin-top:18px; }
+    @media(min-width:980px){ .grid{ grid-template-columns: 1.2fr 1fr; } }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.06); }
+    body.dark-mode .card { background: var(--dark-card); border-color: var(--dark-border); }
+    .card h3{ margin:0 0 10px; color:#333; font-size:18px; }
+    body.dark-mode .card h3 { color: var(--dark-text); }
+
+    .controls{ display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; align-items:end; }
+    .controls .col-2{ grid-column: span 2; }
+    .controls .col-3{ grid-column: span 3; }
+    .controls .col-6{ grid-column: span 6; }
+    .controls label{ font-size:13px; color:#444; margin-bottom:6px; display:block; }
+    body.dark-mode .controls label { color: #ccc; }
+    .controls input, .controls select{
+      width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:14px;
+    }
+    body.dark-mode .controls input, 
+    body.dark-mode .controls select {
+      background: #333; border-color: #555; color: var(--dark-text);
+    }
+
+    .btn{ padding:12px 14px; border:none; background:var(--brand); color:#fff; border-radius:10px; cursor:pointer; font-weight:600; }
+    .btn:hover{ background:var(--brand-dark); }
+    body.dark-mode .btn { background: #555; }
+    body.dark-mode .btn:hover { background: #666; }
+    .btn.secondary{ background:#eef1f5; color:#222; border:1px solid #e3e7ed; }
+    body.dark-mode .btn.secondary { background: #333; color: #ccc; border-color: #555; }
+    .btnbar{ display:flex; gap:10px; flex-wrap:wrap; }
+
+    .section{ margin-top:18px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    body.dark-mode .section { border-color: var(--dark-border); }
+    .section .head{ background:#faf7ef; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+    body.dark-mode .section .head { background: #333; border-color: var(--dark-border); }
+    .section .head h4{ margin:0; font-size:15px; color:#333; }
+    body.dark-mode .section .head h4 { color: var(--dark-text); }
+    .kv{ display:grid; grid-template-columns: 220px 1fr; gap:6px 10px; padding:12px; }
+    .key{ color:#555; }
+    body.dark-mode .key { color: #aaa; }
+    .val{ font-family:var(--mono); color:#111; word-break:break-word; }
+    body.dark-mode .val { color: #ddd; }
+
+    .profile-head{ display:flex; align-items:center; gap:14px; padding:12px; border-bottom:1px solid var(--border); background:#fff; }
+    body.dark-mode .profile-head { background: var(--dark-card); border-color: var(--dark-border); }
+    .avatar{ width:56px; height:56px; border-radius:50%; overflow:hidden; border:2px solid #f0e2b4; }
+    .avatar img{ width:100%; height:100%; display:block; }
+    .pname{ font-weight:700; color:#333; }
+    body.dark-mode .pname { color: var(--dark-text); }
+    .pmeta{ font-size:12px; color:#666; }
+    body.dark-mode .pmeta { color: #aaa; }
+
+    .watermark{ position:relative; }
+    .watermark::after{
+      content:"TEST DATA • FAKE • NON-PRODUCTION"; position:absolute; inset:0; pointer-events:none;
+      background-image: repeating-linear-gradient(45deg, rgba(180,134,8,.08) 0 18px, transparent 18px 36px);
+      mix-blend-mode: multiply; opacity:.5;
+    }
+
+    .disclaimer{ font-size:12px; color:#5a4a1a; background:#fff8e1; border:1px solid #f1e3b2; padding:10px 12px; border-radius:8px; margin-top:12px; }
+    body.dark-mode .disclaimer { background: #333; color: #ccc; border-color: #555; }
+    .muted{ color:#777; font-size:12px; }
+    body.dark-mode .muted { color: #aaa; }
+    .pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid #ddd; background:#fbfbfb; color:#333; }
+    body.dark-mode .pill { background: #333; color: #ccc; border-color: #555; }
+    .ok{ color:var(--ok); }
+    #results .card{ margin-top:16px; }
+    
+    /* Dark mode toggle */
+    .dark-mode-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--brand);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* Search and filter */
+    .search-filter {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-filter input, .search-filter select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: inherit;
+    }
+    body.dark-mode .search-filter input, 
+    body.dark-mode .search-filter select {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+    
+    /* Progress bar */
+    .progress-container {
+      width: 100%;
+      background-color: #f3f3f3;
+      border-radius: 8px;
+      margin: 20px 0;
+      display: none;
+    }
+    body.dark-mode .progress-container { background-color: #333; }
+    .progress-bar {
+      height: 20px;
+      background-color: var(--brand);
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    /* Validation warnings */
+    .validation-warning {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    body.dark-mode .validation-warning {
+      background-color: #333;
+      border-color: #555;
+      color: #ffc107;
+    }
+    
+    /* Mobile responsiveness */
+    @media(max-width: 768px) {
+      .controls {
+        grid-template-columns: 1fr !important;
+      }
+      
+      .controls .col-2, .controls .col-3, .controls .col-6 {
+        grid-column: span 1 !important;
+      }
+      
+      .btnbar {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+      
+      .kv {
+        grid-template-columns: 1fr;
+      }
+      
+      .key {
+        font-weight: bold;
+      }
+    }
+  </style>
+</head>
+<body>
+<button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">🌙</button>
+<div class="wrap">
+  <div class="hero">
+    <h1 class="title" data-i18n="app.title">প্রিমিয়াম ফেক ডেটা জেনারেটর</h1>
+    <p class="subtitle" data-i18n="app.subtitle">শুধু টেস্টিং/শিক্ষামূলক কাজে — সব ডেটা ফেক/নন-লাইভ।</p>
+    <div class="badges">
+      <span class="badge">JSON</span>
+      <span class="badge">CSV</span>
+      <span class="badge">PDF</span>
+      <span class="badge">Excel</span>
+      <span class="badge">SQL</span>
+      <span class="badge">Avatars</span>
+      <span class="badge">Passport</span>
+      <span class="badge">Test Cards</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3 data-i18n="info.title">কি কি তথ্য দিচ্ছে</h3>
+      <ul style="margin:8px 0 0 18px; color:#444;" id="info-list">
+        <li data-i18n="info.item1">ঠিকানা: স্ট্রিট, সিটি/টাউন, স্টেট/রিজিয়ন, জিপ/পোস্টাল, ফোন, দেশ, ল্যাটিটিউড, লংগিটিউড</li>
+        <li data-i18n="info.item2">ব্যক্তিগত: ফুল নাম, জেন্ডার, জন্মতারিখ, ইমেইল, ইউজারনেম, পাসপোর্ট</li>
+        <li data-i18n="info.item3">ফাইন্যান্স (টেস্ট): কার্ড ব্র্যান্ড, কার্ড নম্বর, এক্সপায়ারি, সিভিভি</li>
+        <li data-i18n="info.item4">প্রোফাইল ছবি: প্রতিটি প্রোফাইলের জন্য আলাদা অ্যাভাটার</li>
+        <li data-i18n="info.item5">কাস্টম ফিল্ড: কোম্পানি, জব টাইটেল, ওয়েবসাইট</li>
+      </ul>
+      <div class="disclaimer" id="disclaimer" data-i18n="app.disclaimer">
+        <strong>নোটিস:</strong> সকল নম্বর/আইডেন্টিফায়ার সম্পূর্ণ ফেক/টেস্ট। লাইভ পেমেন্ট বা বাস্তব ভেরিফিকেশনে কাজ করবে না। প্রতারণা/জালিয়াতি কঠোরভাবে নিষিদ্ধ।
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="settings.title">জেনারেশন সেটিংস</h3>
+      <div class="controls" style="margin-top:8px;">
+        <div class="col-2">
+          <label for="lang" data-i18n="settings.language">ভাষা</label>
+          <select id="lang">
+            <option value="bn">বাংলা</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="hi">हिन्दी</option>
+          </select>
+        </div>
+        <div class="col-2">
+          <label for="country" data-i18n="settings.country">দেশ/লোকেশন</label>
+          <select id="country">
+            <option value="US">USA</option>
+            <option value="UK">UK</option>
+            <option value="CA">Canada</option>
+            <option value="BD" selected>Bangladesh</option>
+            <option value="IN">India</option>
+            <option value="AU">Australia</option>
+            <option value="JP">Japan</option>
+            <option value="BR">Brazil</option>
+          </select>
+        </div>
+        <div class="col-2">
+          <label for="count" data-i18n="settings.count">কতটি প্রোফাইল</label>
+          <select id="count">
+            <option>1</option><option>3</option><option>5</option><option>10</option><option>20</option>
+            <option>50</option><option>100</option>
+          </select>
+        </div>
+        <div class="col-2">
+          <label for="brand" data-i18n="settings.brand">কার্ড ব্র্যান্ড</label>
+          <select id="brand">
+            <option value="auto">Auto (Random)</option>
+            <option value="visa">Visa</option>
+            <option value="mastercard">Mastercard</option>
+            <option value="amex">Amex</option>
+            <option value="discover">Discover</option>
+            <option value="jcb">JCB</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label for="customFields" data-i18n="settings.customFields">কাস্টম ফিল্ড (কমা দিয়ে আলাদা করুন)</label>
+          <input type="text" id="customFields" placeholder="e.g. company,jobTitle,website">
+        </div>
+        <div class="col-2">
+          <button class="btn" id="gen" data-i18n="buttons.generate">Generate</button>
+        </div>
+        <div class="col-6">
+          <div class="btnbar">
+            <button class="btn secondary" id="copy" data-i18n="buttons.copyJson">Copy JSON</button>
+            <button class="btn secondary" id="download-json" data-i18n="buttons.downloadJson">Download JSON</button>
+            <button class="btn secondary" id="download-csv" data-i18n="buttons.downloadCsv">Download CSV</button>
+            <button class="btn secondary" id="download-excel" data-i18n="buttons.downloadExcel">Download Excel</button>
+            <button class="btn secondary" id="download-sql" data-i18n="buttons.downloadSql">Download SQL</button>
+            <button class="btn secondary" id="download-pdf" data-i18n="buttons.downloadPdf">Download PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p class="muted" style="margin-top:10px;" id="tip" data-i18n="app.tip">
+        টিপ: “Auto” নিলে কার্ড ব্র্যান্ড এলোমেলো হবে। সব কার্ড নম্বর অফিসিয়াল টেস্ট BIN থেকে জেনারেট হয় (লাইভ নয়)।
+      </p>
+    </div>
+  </div>
+
+  <div class="search-filter">
+    <input type="text" id="searchInput" placeholder="Search by name or email...">
+    <select id="genderFilter">
+      <option value="">All Genders</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    <select id="countryFilter">
+      <option value="">All Countries</option>
+      <option value="US">USA</option>
+      <option value="UK">UK</option>
+      <option value="CA">Canada</option>
+      <option value="BD">Bangladesh</option>
+      <option value="IN">India</option>
+      <option value="AU">Australia</option>
+      <option value="JP">Japan</option>
+      <option value="BR">Brazil</option>
+    </select>
+  </div>
+
+  <div id="results"></div>
+
+  <p class="muted" style="margin-top:20px;" data-i18n="app.footer">
+    © Test Data Only. এই টুল কোনো বাস্তব তথ্য সংগ্রহ/সংরক্ষণ করে না।
+  </p>
+</div>
+
+<script>
+  // ------------------ i18n ------------------
+  const i18n = {
+    en: {
+      "app.title": "Premium Fake Data Generator",
+      "app.subtitle": "For testing/education only — all data is fake/non-live.",
+      "app.disclaimer": "Notice: All numbers/identifiers are FAKE/TEST. They will not work for live payments or real verification. Fraud is strictly prohibited.",
+      "app.tip": "Tip: With “Auto”, the card brand is randomized. All card numbers are generated from official test BINs (non-live).",
+      "app.footer": "© Test Data Only. This tool does not collect or store any real information.",
+
+      "info.title": "What this provides",
+      "info.item1": "Address: Street, City/Town, State/Region, Zip/Postal Code, Phone, Country, Latitude, Longitude",
+      "info.item2": "Person: Full Name, Gender, Birthday, Email, Username, Passport",
+      "info.item3": "Finance (test): Card brand, Card number, Expiry, CVV",
+      "info.item4": "Profile image: Unique avatar per profile",
+      "info.item5": "Custom Fields: Company, Job Title, Website",
+
+      "settings.title": "Generation settings",
+      "settings.language": "Language",
+      "settings.country": "Country/Location",
+      "settings.count": "Profiles count",
+      "settings.brand": "Card brand",
+      "settings.customFields": "Custom Fields (comma separated)",
+
+      "buttons.generate": "Generate",
+      "buttons.copyJson": "Copy JSON",
+      "buttons.downloadJson": "Download JSON",
+      "buttons.downloadCsv": "Download CSV",
+      "buttons.downloadExcel": "Download Excel",
+      "buttons.downloadSql": "Download SQL",
+      "buttons.downloadPdf": "Download PDF",
+
+      "sec.address": "Address",
+      "sec.person": "Person profile",
+      "sec.finance": "Finance (TEST ONLY)",
+      "sec.custom": "Custom Fields",
+      "badge.fake": "Fake Only",
+      "badge.nonlive": "Non-Live",
+      "profile": "Profile",
+
+      "field.street":"Street",
+      "field.city":"City/Town",
+      "field.region.US":"State",
+      "field.region.UK":"County/Region",
+      "field.region.CA":"Province",
+      "field.region.BD":"Division/District",
+      "field.region.IN":"State",
+      "field.region.AU":"State",
+      "field.region.JP":"Prefecture",
+      "field.region.BR":"State",
+      "field.postal":"Zip/Postal Code",
+      "field.phone":"Phone Number",
+      "field.country":"Country",
+      "field.latitude":"Latitude",
+      "field.longitude":"Longitude",
+      "field.fullName":"Full Name",
+      "field.gender":"Gender",
+      "field.birthday":"Birthday",
+      "field.passport":"Passport Number",
+      "field.email":"Email",
+      "field.username":"Username",
+      "field.ccBrand":"Credit card brand",
+      "field.ccNumber":"Credit card number",
+      "field.expire":"Expire",
+      "field.cvv":"CVV",
+      "field.company":"Company",
+      "field.jobTitle":"Job Title",
+      "field.website":"Website",
+
+      "gender.male":"male",
+      "gender.female":"female",
+
+      "country.US":"United States",
+      "country.UK":"United Kingdom",
+      "country.CA":"Canada",
+      "country.BD":"Bangladesh",
+      "country.IN":"India",
+      "country.AU":"Australia",
+      "country.JP":"Japan",
+      "country.BR":"Brazil",
+    },
+    bn: {
+      "app.title": "প্রিমিয়াম ফেক ডেটা জেনারেটর",
+      "app.subtitle": "শুধু টেস্টিং/শিক্ষামূলক কাজে — সব ডেটা ফেক/নন-লাইভ।",
+      "app.disclaimer": "নোটিস: সকল নম্বর/আইডেন্টিফায়ার সম্পূর্ণ ফেক/টেস্ট। লাইভ পেমেন্ট বা বাস্তব ভেরিফিকেশনে কাজ করবে না। প্রতারণা/জালিয়াতি কঠোরভাবে নিষিদ্ধ।",
+      "app.tip": "টিপ: “Auto” নিলে কার্ড ব্র্যান্ড এলোমেলো হবে। সব কার্ড নম্বর অফিসিয়াল টেস্ট BIN থেকে জেনারেট হয় (লাইভ নয়)।",
+      "app.footer": "© শুধু টেস্ট ডেটা। এই টুল কোনো বাস্তব তথ্য সংগ্রহ/সংরক্ষণ করে না।",
+
+      "info.title": "কি কি তথ্য দিচ্ছে",
+      "info.item1": "ঠিকানা: স্ট্রিট, সিটি/টাউন, স্টেট/রিজিয়ন, জিপ/পোস্টাল, ফোন, দেশ, ল্যাটিটিউড, লংগিটিউড",
+      "info.item2": "ব্যক্তিগত: ফুল নাম, জেন্ডার, জন্মতারিখ, ইমেইল, ইউজারনেম, পাসপোর্ট",
+      "info.item3": "ফাইন্যান্স (টেস্ট): কার্ড ব্র্যান্ড, কার্ড নম্বর, এক্সপায়ারি, সিভিভি",
+      "info.item4": "প্রোফাইল ছবি: প্রতিটি প্রোফাইলের জন্য আলাদা অ্যাভাটার",
+      "info.item5": "কাস্টম ফিল্ড: কোম্পানি, জব টাইটেল, ওয়েবসাইট",
+
+      "settings.title": "জেনারেশন সেটিংস",
+      "settings.language": "ভাষা",
+      "settings.country": "দেশ/লোকেশন",
+      "settings.count": "কতটি প্রোফাইল",
+      "settings.brand": "কার্ড ব্র্যান্ড",
+      "settings.customFields": "কাস্টম ফিল্ড (কমা দিয়ে আলাদা করুন)",
+
+      "buttons.generate": "Generate",
+      "buttons.copyJson": "Copy JSON",
+      "buttons.downloadJson": "Download JSON",
+      "buttons.downloadCsv": "Download CSV",
+      "buttons.downloadExcel": "Download Excel",
+      "buttons.downloadSql": "Download SQL",
+      "buttons.downloadPdf": "Download PDF",
+
+      "sec.address": "ঠিকানা",
+      "sec.person": "ব্যক্তিগত প্রোফাইল",
+      "sec.finance": "ফাইন্যান্স (শুধু টেস্ট)",
+      "sec.custom": "কাস্টম ফিল্ড",
+      "badge.fake": "ফেক",
+      "badge.nonlive": "নন-লাইভ",
+      "profile": "প্রোফাইল",
+
+      "field.street":"স্ট্রিট",
+      "field.city":"সিটি/টাউন",
+      "field.region.US":"স্টেট",
+      "field.region.UK":"কাউন্টি/রিজিয়ন",
+      "field.region.CA":"প্রভিন্স",
+      "field.region.BD":"বিভাগ/জেলা",
+      "field.region.IN":"রাজ্য",
+      "field.region.AU":"রাজ্য",
+      "field.region.JP":"প্রিফেকচার",
+      "field.region.BR":"রাজ্য",
+      "field.postal":"জিপ/পোস্টাল কোড",
+      "field.phone":"ফোন নম্বর",
+      "field.country":"দেশ",
+      "field.latitude":"ল্যাটিটিউড",
+      "field.longitude":"লংগিটিউড",
+      "field.fullName":"নাম",
+      "field.gender":"জেন্ডার",
+      "field.birthday":"জন্মতারিখ",
+      "field.passport":"পাসপোর্ট নম্বর",
+      "field.email":"ইমেইল",
+      "field.username":"ইউজারনেম",
+      "field.ccBrand":"কার্ড ব্র্যান্ড",
+      "field.ccNumber":"কার্ড নম্বর",
+      "field.expire":"এক্সপায়ারি",
+      "field.cvv":"সিভিভি",
+      "field.company":"কোম্পানি",
+      "field.jobTitle":"জব টাইটেল",
+      "field.website":"ওয়েবসাইট",
+
+      "gender.male":"পুরুষ",
+      "gender.female":"নারী",
+
+      "country.US":"যুক্তরাষ্ট্র",
+      "country.UK":"যুক্তরাজ্য",
+      "country.CA":"কানাডা",
+      "country.BD":"বাংলাদেশ",
+      "country.IN":"ভারত",
+      "country.AU":"অস্ট্রেলিয়া",
+      "country.JP":"জাপান",
+      "country.BR":"ব্রাজিল",
+    },
+    // Add other languages (es, fr, de, hi) with similar structure
+    es: {
+      // Spanish translations
+    },
+    fr: {
+      // French translations
+    },
+    de: {
+      // German translations
+    },
+    hi: {
+      // Hindi translations
+    }
+  };
+
+  let currentLang = 'bn';
+  function t(key){ return (i18n[currentLang] && i18n[currentLang][key]) || key; }
+  function applyI18n(){
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+      el.innerText = t(el.getAttribute("data-i18n"));
+    });
+  }
+
+  // ------------------ Utils ------------------
+  const rnd = (min, max) => Math.floor(Math.random()*(max-min+1))+min;
+  const pick = arr => arr[rnd(0, arr.length-1)];
+  const pad = (n, w) => String(n).padStart(w,'0');
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lettersCA = "ABCEGHJKLMNPRSTVWXYZ"; // usable set for CA postal
+
+  // Enhanced name sets for different cultures
+  const namesByCulture = {
+    bn: {
+      male: ["আরিফ", "কামাল", "জামিল", "সাকিব", "রাজিব", "তৌহিদ", "ফাহিম", "ইমরান", "নাদিম", "রিয়াদ"],
+      female: ["ফারহানা", "সাবিহা", "নাদিয়া", "তানিয়া", "রুমা", "সামিয়া", "জারিন", "নুসরাত", "সাদিয়া", "আফরিন"],
+      last: ["খান", "আহমেদ", "হোসেন", "চৌধুরী", "ইসলাম", "রহমান", "আলী", "শেখ", "সরকার", "মিয়া"]
+    },
+    in: {
+      male: ["রাহুল", "অমিত", "বিক্রম", "রাজেশ", "সঞ্জয়", "অশোক", "বিকাশ", "দীপক", "মোহন", "অজয়"],
+      female: ["প্রিয়া", "অনিতা", "সুনীতা", "কবিতা", "পূজা", "নীতা", "সুষমা", "লতা", "মীরা", "অনু"],
+      last: ["শর্মা", "পাটেল", "সিং", "কুমার", "গুপ্তা", "আগরওয়াল", "জৈন", "শর্মা", "বর্মা", "মালিক"]
+    },
+    us: {
+      male: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Christopher"],
+      female: ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen"],
+      last: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson"]
+    },
+    uk: {
+      male: ["Oliver", "Harry", "George", "Noah", "Jack", "Jacob", "Leo", "Oscar", "Charlie", "Thomas"],
+      female: ["Olivia", "Amelia", "Isla", "Ava", "Emily", "Sophia", "Grace", "Mia", "Poppy", "Ella"],
+      last: ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Johnson", "Davies", "Robinson", "Wright"]
+    },
+    ca: {
+      male: ["Liam", "Noah", "Lucas", "Oliver", "Levi", "Ethan", "Adam", "Benjamin", "William", "Theo"],
+      female: ["Olivia", "Emma", "Charlotte", "Amelia", "Sophia", "Ava", "Chloe", "Evelyn", "Isla", "Nora"],
+      last: ["Smith", "Brown", "Tremblay", "Martin", "Roy", "Wilson", "Macdonald", "Gagnon", "Johnson", "Taylor"]
+    },
+    au: {
+      male: ["Oliver", "William", "Jack", "Noah", "Thomas", "James", "Lachlan", "Charlie", "Lucas", "Ethan"],
+      female: ["Charlotte", "Olivia", "Amelia", "Isla", "Ava", "Mia", "Chloe", "Emily", "Sophie", "Grace"],
+      last: ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Johnson", "White", "Martin", "Anderson"]
+    },
+    jp: {
+      male: ["太郎", "次郎", "三郎", "誠", "健一", "大輔", "浩", "拓海", "翔太", "悠真"],
+      female: ["花子", "美咲", "陽菜", "さくら", "優子", "愛", "結衣", "麻衣", "真央", "由美"],
+      last: ["佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺", "山本", "中村", "小林", "加藤"]
+    },
+    br: {
+      male: ["João", "Pedro", "Lucas", "Mateus", "Gabriel", "Rafael", "Carlos", "Felipe", "Bruno", "Eduardo"],
+      female: ["Maria", "Ana", "Juliana", "Fernanda", "Patrícia", "Aline", "Mariana", "Camila", "Letícia", "Isabela"],
+      last: ["Silva", "Santos", "Oliveira", "Souza", "Pereira", "Costa", "Rodrigues", "Almeida", "Nascimento", "Lima"]
+    }
+  };
+
+  // Address parts per country
+  const streetsCommon = ["Main St", "Oak Ave", "Pine Rd", "Maple Dr", "Cedar Ln", "Elm St", "Church Rd", "High St", "Station Rd", "Parkway", "Lakeview Blvd", "Sunset Rd"];
+  const citiesByCountry = {
+    US: [{city:"New York",state:"NY"}, {city:"Los Angeles",state:"CA"}, {city:"Chicago",state:"IL"}, {city:"Houston",state:"TX"}, {city:"Miami",state:"FL"}, {city:"Seattle",state:"WA"}, {city:"Boston",state:"MA"}, {city:"Denver",state:"CO"}, {city:"Atlanta",state:"GA"}, {city:"Phoenix",state:"AZ"}],
+    UK: [{city:"London",state:"Greater London"}, {city:"Manchester",state:"Greater Manchester"}, {city:"Birmingham",state:"West Midlands"}, {city:"Leeds",state:"West Yorkshire"}, {city:"Bristol",state:"Bristol"}],
+    CA: [{city:"Toronto",state:"ON"}, {city:"Vancouver",state:"BC"}, {city:"Montreal",state:"QC"}, {city:"Calgary",state:"AB"}, {city:"Ottawa",state:"ON"}],
+    BD: [{city:"Dhaka",state:"Dhaka"}, {city:"Chattogram",state:"Chattogram"}, {city:"Sylhet",state:"Sylhet"}, {city:"Rajshahi",state:"Rajshahi"}, {city:"Khulna",state:"Khulna"}],
+    IN: [{city:"Mumbai",state:"Maharashtra"}, {city:"Delhi",state:"Delhi"}, {city:"Bangalore",state:"Karnataka"}, {city:"Hyderabad",state:"Telangana"}, {city:"Chennai",state:"Tamil Nadu"}],
+    AU: [{city:"Sydney",state:"NSW"}, {city:"Melbourne",state:"Victoria"}, {city:"Brisbane",state:"Queensland"}, {city:"Perth",state:"Western Australia"}, {city:"Adelaide",state:"South Australia"}],
+    JP: [{city:"Tokyo",state:"Tokyo"}, {city:"Osaka",state:"Osaka"}, {city:"Kyoto",state:"Kyoto"}, {city:"Yokohama",state:"Kanagawa"}, {city:"Nagoya",state:"Aichi"}],
+    BR: [{city:"São Paulo",state:"SP"}, {city:"Rio de Janeiro",state:"RJ"}, {city:"Brasília",state:"DF"}, {city:"Salvador",state:"BA"}, {city:"Fortaleza",state:"CE"}]
+  };
+  const areaCodesUS = ["212","213","312","305","206","617","720","404","602","713"];
+  const areaCodesCA = ["416","604","514","403","613","647","778","418"];
+  const areaCodesUK = ["020","0161","0121","0113","0117","029"];
+  const mobilePrefixesBD = ["013","014","015","016","017","018","019"];
+  const mobilePrefixesIN = ["91","92","93","94","95","96","97","98","99"];
+  const areaCodesAU = ["02","03","07","08"];
+  const areaCodesJP = ["03","06","011","022","042"];
+  const areaCodesBR = ["11","21","31","41","51","61","71","81"];
+
+  function randomLatLon(country){
+    let lat, lon;
+    switch(country){
+      case 'US': lat = rnd(2400000, 4900000)/100000; lon = - (rnd(6700000, 12400000)/100000); break; // ~24..49, -67..-124
+      case 'UK': lat = rnd(5000000, 5800000)/100000; lon = - (rnd(800000, 200000)/100000); break;   // ~50..58, -8..-2
+      case 'CA': lat = rnd(4300000, 8300000)/100000; lon = - (rnd(5200000, 14100000)/100000); break;// ~43..83, -52..-141
+      case 'BD': lat = rnd(2050000, 2650000)/100000; lon = rnd(8800000, 9200000)/100000; break;     // ~20.5..26.5, 88..92
+      case 'IN': lat = rnd(800000, 3700000)/100000; lon = rnd(6800000, 9700000)/100000; break;      // ~8..37, 68..97
+      case 'AU': lat = - (rnd(1000000, 4400000)/100000); lon = rnd(11300000, 15300000)/100000; break; // ~-44..-10, 113..153
+      case 'JP': lat = rnd(2000000, 4600000)/100000; lon = rnd(12200000, 14500000)/100000; break;   // ~20..46, 122..145
+      case 'BR': lat = - (rnd(330000, 500000)/100000); lon = - (rnd(350000, 740000)/100000); break; // ~-33..-5, -35..-74
+      default: lat = 0; lon = 0;
+    }
+    return [Number(lat.toFixed(6)), Number(lon.toFixed(6))];
+  }
+
+  function phoneByCountry(country){
+    switch(country){
+      case 'US': {
+        const a = pick(areaCodesUS), p1 = pad(rnd(100,999),3), p2 = pad(rnd(1000,9999),4);
+        return `(${a}) ${p1}-${p2}`;
+      }
+      case 'CA': {
+        const a = pick(areaCodesCA), p1 = pad(rnd(100,999),3), p2 = pad(rnd(1000,9999),4);
+        return `(${a}) ${p1}-${p2}`;
+      }
+      case 'UK': {
+        const a = pick(areaCodesUK), p1 = pad(rnd(1000,9999),4), p2 = pad(rnd(1000,9999),4);
+        return `+44 ${a} ${p1} ${p2}`;
+      }
+      case 'BD': {
+        const pre = pick(mobilePrefixesBD);
+        return `+880${pre.slice(1)}${pad(rnd(0,9999999),7)}`; // +8801XXXXXXXXX
+      }
+      case 'IN': {
+        const pre = pick(mobilePrefixesIN);
+        return `+91${pre}${pad(rnd(0,9999999),7)}`; // +91XXXXXXXXXX
+      }
+      case 'AU': {
+        const a = pick(areaCodesAU), p1 = pad(rnd(1000,9999),4), p2 = pad(rnd(100,999),3);
+        return `+61 ${a} ${p1} ${p2}`;
+      }
+      case 'JP': {
+        const a = pick(areaCodesJP), p1 = pad(rnd(1000,9999),4), p2 = pad(rnd(1000,9999),4);
+        return `+81 ${a} ${p1} ${p2}`;
+      }
+      case 'BR': {
+        const a = pick(areaCodesBR), p1 = pad(rnd(1000,9999),4), p2 = pad(rnd(1000,9999),4);
+        return `+55 ${a} ${p1} ${p2}`;
+      }
+    }
+  }
+
+  function postalByCountry(country){
+    switch(country){
+      case 'US': return pad(rnd(5,99950),5);
+      case 'CA': {
+        const L = s=>s[rnd(0,s.length-1)];
+        return `${L(lettersCA)}${rnd(0,9)}${L(lettersCA)} ${rnd(0,9)}${L(lettersCA)}${rnd(0,9)}`;
+      }
+      case 'UK': {
+        // Very simplified UK postcode
+        const L = s=>s[rnd(0,s.length-1)];
+        const out = `${L(letters)}${rnd(1,9)}${Math.random()<0.5?L(letters):""}`.trim();
+        const inb = `${rnd(0,9)}${L(letters)}${L(letters)}`;
+        return `${out} ${inb}`;
+      }
+      case 'BD': return pad(rnd(1000,9999),4);
+      case 'IN': return pad(rnd(100000, 999999),6);
+      case 'AU': {
+        const L = s=>s[rnd(0,s.length-1)];
+        return `${L(letters)}${L(letters)}${L(letters)} ${rnd(0,9)}`;
+      }
+      case 'JP': return pad(rnd(100,999),3) + "-" + pad(rnd(1000,9999),4);
+      case 'BR': return pad(rnd(10000,99999),5) + "-" + pad(rnd(100,999),3);
+    }
+  }
+
+  function makeAddress(country){
+    const c = pick(citiesByCountry[country]);
+    const streetNo = rnd(10, 9999);
+    const streetName = pick(streetsCommon);
+    const [lat, lon] = randomLatLon(country);
+    return {
+      street: country==='BD' || country==='IN' ? `House ${rnd(1,200)}, Road ${rnd(1,50)}, ${streetName}` : `${streetNo} ${streetName}`,
+      city: c.city,
+      state: c.state,
+      postal: postalByCountry(country),
+      phone: phoneByCountry(country),
+      country,
+      latitude: lat,
+      longitude: lon
+    };
+  }
+
+  function randomDOB(){
+    const year = rnd(1950, 2005);
+    const month = pad(rnd(1,12),2);
+    const day = pad(rnd(1,28),2);
+    return `${year}-${month}-${day}`;
+  }
+
+  function fakePassport(country){
+    const L = ()=>letters[rnd(0,letters.length-1)];
+    switch(country){
+      case 'US': return `${rnd(100000000,999999999)}`;               // 9 digits (fake)
+      case 'UK': return `${rnd(100000000,999999999)}${L()}`;         // 9 digits + 1 letter (fake)
+      case 'CA': return `${L()}${L()}${pad(rnd(0,999999),6)}`;       // 2 letters + 6 digits (fake)
+      case 'BD': return `B${L()}${pad(rnd(0,9999999),7)}`;           // B? + 7 digits (fake)
+      case 'IN': return `${L()}${pad(rnd(0,9999999),7)}`;            // 1 letter + 7 digits (fake)
+      case 'AU': return `${L()}${pad(rnd(0,9999999),7)}`;            // 1 letter + 7 digits (fake)
+      case 'JP': return `${pad(rnd(10000000,99999999),8)}`;           // 8 digits (fake)
+      case 'BR': return `${L()}${L()}${pad(rnd(0,99999999),8)}`;      // 2 letters + 8 digits (fake)
+      default: return `${L()}${pad(rnd(0,99999999),8)}`;
+    }
+  }
+
+  function emailFromName(full){
+    const domains = ["example.com","testmail.com","mail.test","sandbox.dev"];
+    const base = full.toLowerCase().replace(/[^a-z ]/g,"").replace(/\s+/g,".");
+    return `${base}@${pick(domains)}`;
+  }
+
+  function usernameFromName(full, country){
+    const base = full.toLowerCase().replace(/[^a-z]/g,"").slice(0,10);
+    return `${base}_${country.toLowerCase()}${rnd(10,99)}`;
+  }
+
+  // Avatar via canvas (Data URL PNG)
+  function avatarForName(full, size=80){
+    const initials = full.split(/\s+/).map(w=>w[0]?.toUpperCase()||"").slice(0,2).join("");
+    const hash = Array.from(full).reduce((a,c)=>a+c.charCodeAt(0),0);
+    const hue = hash % 360;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    // background
+    const grd = ctx.createLinearGradient(0,0,size,size);
+    grd.addColorStop(0, `hsl(${hue}, 70%, 65%)`);
+    grd.addColorStop(1, `hsl(${(hue+40)%360}, 70%, 55%)`);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,size,size);
+    // initials
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.font = `bold ${Math.floor(size*0.42)}px Arial`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(initials || "NA", size/2, size/2);
+    return canvas.toDataURL("image/png");
+  }
+
+  // Luhn + Test cards
+  function luhnCheckDigit(digits){
+    let sum=0, parity=(digits.length)%2;
+    for(let i=0;i<digits.length;i++){
+      let d = parseInt(digits[i],10);
+      if(i%2===parity){ d*=2; if(d>9) d-=9; }
+      sum+=d;
+    }
+    return (10 - (sum%10))%10;
+  }
+  function genTestCard(brand){
+    const brands = ["visa","mastercard","amex","discover","jcb"];
+    if(brand==="auto") brand = pick(brands);
+    let prefix = "", length = 16, label = brand.toUpperCase();
+    switch(brand){
+      case "visa":       prefix="411111"; length=16; break;
+      case "mastercard": prefix="555555"; length=16; break;
+      case "amex":       prefix=pick(["378282","371449"]); length=15; break;
+      case "discover":   prefix="601111"; length=16; break;
+      case "jcb":        prefix="356600"; length=16; break;
+      default:           prefix="411111"; length=16; label="VISA";
+    }
+    let body = prefix;
+    while(body.length < length-1) body += String(rnd(0,9));
+    const check = luhnCheckDigit(body);
+    const number = body + String(check);
+    const cvv = brand==="amex" ? pad(rnd(1,9999),4) : pad(rnd(1,999),3);
+    const expYear = new Date().getFullYear() + rnd(2,5);
+    const expMonth = pad(rnd(1,12),2);
+    return { brand: label, number, cvv, expire: `${expYear}/${parseInt(expMonth,10)}` };
+  }
+
+  // Custom fields generation
+  function generateCustomFields(fields) {
+    const customData = {};
+    const companies = ["TechCorp", "Global Solutions", "InnovateX", "DataSys", "NextGen", "FutureWorks", "SmartTech", "Digital Dynamics"];
+    const jobTitles = ["Software Engineer", "Data Analyst", "Product Manager", "UX Designer", "Marketing Specialist", "Sales Representative", "HR Manager", "Financial Analyst"];
+    const websites = ["example.com", "testsite.org", "demo.net", "sample.io", "fakewebsite.co"];
+    
+    fields.split(',').forEach(field => {
+      field = field.trim();
+      if(field === 'company') customData.company = pick(companies);
+      if(field === 'jobTitle') customData.jobTitle = pick(jobTitles);
+      if(field === 'website') customData.website = `https://www.${pick(websites)}`;
+    });
+    
+    return customData;
+  }
+
+  // Data validation
+  function validateGeneratedData(profile) {
+    const issues = [];
+    
+    // Email format check
+    if(!profile.person.email.includes('@') || !profile.person.email.includes('.')) {
+      issues.push('Invalid email format');
+    }
+    
+    // Phone number format check
+    const phoneDigits = profile.address.phone.replace(/\D/g, '');
+    if(phoneDigits.length < 10 || phoneDigits.length > 15) {
+      issues.push('Invalid phone number format');
+    }
+    
+    // Card number Luhn check
+    if(!luhnCheck(profile.card.number)) {
+      issues.push('Invalid card number (Luhn check failed)');
+    }
+    
+    return issues;
+  }
+
+  function luhnCheck(cardNumber) {
+    let sum = 0;
+    let isEven = false;
+    
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+      let digit = parseInt(cardNumber.charAt(i), 10);
+      
+      if (isEven) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+      
+      sum += digit;
+      isEven = !isEven;
+    }
+    
+    return sum % 10 === 0;
+  }
+
+  function makePerson(country, customFields = []) {
+    const cultureKey = country.toLowerCase();
+    const genderKey = Math.random()<0.5 ? "male" : "female";
+    
+    // Get names based on country/culture
+    let first, last;
+    if (namesByCulture[cultureKey]) {
+      first = pick(namesByCulture[cultureKey][genderKey]);
+      last = pick(namesByCulture[cultureKey].last);
+    } else {
+      // Fallback to US names
+      first = pick(namesByCulture.us[genderKey]);
+      last = pick(namesByCulture.us.last);
+    }
+    
+    const suffixes = [""," Jr."," Sr."," II"," III"];
+    const full = `${first} ${last}${pick(suffixes)}`;
+    const email = emailFromName(full);
+    const username = usernameFromName(full, country);
+    const passport = fakePassport(country);
+    
+    const person = { fullName: full, gender: genderKey, birthday: randomDOB(), email, username, passport };
+    
+    // Add custom fields if any
+    if (customFields.length > 0) {
+      person.custom = generateCustomFields(customFields.join(','));
+    }
+    
+    return person;
+  }
+
+  function makeProfile(country, brand, customFields = []) {
+    const address = makeAddress(country);
+    const person = makePerson(country, customFields);
+    const card = genTestCard(brand);
+    const avatar = avatarForName(person.fullName, 112);
+    
+    // Validate data
+    const validationIssues = validateGeneratedData({ address, person, card });
+    
+    return { 
+      address, 
+      person, 
+      card, 
+      avatar,
+      validationIssues 
+    };
+  }
+
+  // ------------------ Rendering ------------------
+  function regionLabel(country){
+    return t(`field.region.${country}`) || t("field.region.US");
+  }
+  function countryName(country){
+    return t(`country.${country}`) || country;
+  }
+
+  function renderProfile(p, idx, country) {
+    const wrap = document.createElement("div");
+    wrap.className = "card watermark";
+    
+    // Add validation warnings if any
+    let validationHtml = '';
+    if (p.validationIssues && p.validationIssues.length > 0) {
+      validationHtml = `
+        <div class="validation-warning">
+          <strong>Validation Issues:</strong> ${p.validationIssues.join(', ')}
+        </div>
+      `;
+    }
+    
+    // Build custom fields HTML if any
+    let customFieldsHtml = '';
+    if (p.person.custom) {
+      customFieldsHtml = `
+        <div class="section">
+          <div class="head"><h4>${t("sec.custom")}</h4></div>
+          <div class="kv">
+            ${Object.entries(p.person.custom).map(([key, value]) => `
+              <div class="key">${t(`field.${key}`) || key}</div>
+              <div class="val">${value}</div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
+    wrap.innerHTML = `
+      <div class="profile-head">
+        <div class="avatar"><img src="${p.avatar}" alt="avatar"></div>
+        <div>
+          <div class="pname">${p.person.fullName}</div>
+          <div class="pmeta">${t("profile")} #${idx} — ${countryName(country)}</div>
+        </div>
+      </div>
+      ${validationHtml}
+
+      <div class="section">
+        <div class="head"><h4>${t("sec.address")}</h4><span class="pill mono">${country}</span></div>
+        <div class="kv">
+          <div class="key">${t("field.street")}</div><div class="val">${p.address.street}</div>
+          <div class="key">${t("field.city")}</div><div class="val">${p.address.city}</div>
+          <div class="key">${regionLabel(country)}</div><div class="val">${p.address.state}</div>
+          <div class="key">${t("field.postal")}</div><div class="val">${p.address.postal}</div>
+          <div class="key">${t("field.phone")}</div><div class="val">${p.address.phone}</div>
+          <div class="key">${t("field.country")}</div><div class="val">${countryName(p.address.country)}</div>
+          <div class="key">${t("field.latitude")}</div><div class="val">${p.address.latitude}</div>
+          <div class="key">${t("field.longitude")}</div><div class="val">${p.address.longitude}</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h4>${t("sec.person")}</h4><span class="pill">${t("badge.fake")}</span></div>
+        <div class="kv">
+          <div class="key">${t("field.fullName")}</div><div class="val">${p.person.fullName}</div>
+          <div class="key">${t("field.gender")}</div><div class="val">${t("gender."+p.person.gender)}</div>
+          <div class="key">${t("field.birthday")}</div><div class="val">${p.person.birthday}</div>
+          <div class="key">${t("field.email")}</div><div class="val">${p.person.email}</div>
+          <div class="key">${t("field.username")}</div><div class="val">${p.person.username}</div>
+          <div class="key">${t("field.passport")}</div><div class="val">${p.person.passport}</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h4>${t("sec.finance")}</h4><span class="pill ok">${t("badge.nonlive")}</span></div>
+        <div class="kv">
+          <div class="key">${t("field.ccBrand")}</div><div class="val">${p.card.brand}</div>
+          <div class="key">${t("field.ccNumber")}</div><div class="val">${p.card.number}</div>
+          <div class="key">${t("field.expire")}</div><div class="val">${p.card.expire}</div>
+          <div class="key">${t("field.cvv")}</div><div class="val">${p.card.cvv}</div>
+        </div>
+      </div>
+      
+      ${customFieldsHtml}
+    `;
+    return wrap;
+  }
+
+  function profilesToJSON(profiles){ return JSON.stringify(profiles, null, 2); }
+
+  function profilesToCSV(profiles){
+    const rows = [];
+    
+    // Build headers dynamically including custom fields
+    const header = [
+      "country","street","city","region","postal","phone","latitude","longitude",
+      "fullName","gender","birthday","email","username","passport",
+      "brand","cardNumber","expire","cvv","avatarDataUrl"
+    ];
+    
+    // Add custom field headers if any
+    if (profiles.length > 0 && profiles[0].person.custom) {
+      Object.keys(profiles[0].person.custom).forEach(field => {
+        header.push(field);
+      });
+    }
+    
+    rows.push(header.join(","));
+    
+    for(const p of profiles){
+      const r = [
+        p.address.country, p.address.street, p.address.city, p.address.state, p.address.postal, p.address.phone,
+        p.address.latitude, p.address.longitude,
+        p.person.fullName, p.person.gender, p.person.birthday, p.person.email, p.person.username, p.person.passport,
+        p.card.brand, p.card.number, p.card.expire, p.card.cvv,
+        p.avatar
+      ];
+      
+      // Add custom field values if any
+      if (p.person.custom) {
+        Object.values(p.person.custom).forEach(value => {
+          r.push(value);
+        });
+      }
+      
+      rows.push(r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+    }
+    return rows.join("\n");
+  }
+
+  async function profilesToPDF(profiles, lang, country){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({unit:'pt', format:'a4'});
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    let y = margin;
+
+    function header(){
+      doc.setDrawColor(233); doc.setLineWidth(1);
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(180,134,8);
+      doc.text(t("app.title") + " — " + t("badge.nonlive"), margin, y);
+      y += 10; doc.setDrawColor(233); doc.line(margin, y, pageW - margin, y); y += 20;
+      doc.setTextColor(20); doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    }
+    function ensureSpace(linesNeeded){
+      if(y + linesNeeded > pageH - margin){
+        doc.addPage(); y = margin; header();
+      }
+    }
+    function kv(label, value){
+      const labelW = 170;
+      doc.setFont('helvetica','bold'); doc.text(label, margin, y);
+      doc.setFont('helvetica','normal');
+      const maxW = pageW - margin - (margin + labelW + 80);
+      const txt = doc.splitTextToSize(String(value), maxW);
+      doc.text(txt, margin + labelW, y);
+      y += 16 * Math.max(1, txt.length);
+    }
+    function section(title){
+      ensureSpace(30);
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.setTextColor(60);
+      doc.text(title, margin, y);
+      y += 6; doc.setDrawColor(233); doc.line(margin, y, pageW - margin, y); y += 12;
+      doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(20);
+    }
+
+    header();
+    profiles.forEach((p, idx) => {
+      ensureSpace(100);
+      // Avatar top-right
+      if(p.avatar){
+        try { doc.addImage(p.avatar, 'PNG', pageW - margin - 64, y-4, 64, 64); } catch(e){}
+      }
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(60);
+      doc.text(`${t("profile")} #${idx+1} — ${countryName(country)}`, margin, y); y += 10;
+      doc.setTextColor(20); doc.setFont('helvetica','normal');
+
+      // Address
+      section(t("sec.address"));
+      kv(t("field.street"), p.address.street);
+      kv(t("field.city"), p.address.city);
+      kv(regionLabel(country), p.address.state);
+      kv(t("field.postal"), p.address.postal);
+      kv(t("field.phone"), p.address.phone);
+      kv(t("field.country"), countryName(p.address.country));
+      kv(t("field.latitude"), p.address.latitude);
+      kv(t("field.longitude"), p.address.longitude);
+
+      // Person
+      section(t("sec.person"));
+      kv(t("field.fullName"), p.person.fullName);
+      kv(t("field.gender"), t("gender."+p.person.gender));
+      kv(t("field.birthday"), p.person.birthday);
+      kv(t("field.email"), p.person.email);
+      kv(t("field.username"), p.person.username);
+      kv(t("field.passport"), p.person.passport);
+
+      // Custom fields if any
+      if (p.person.custom) {
+        section(t("sec.custom"));
+        Object.entries(p.person.custom).forEach(([key, value]) => {
+          kv(t(`field.${key}`) || key, value);
+        });
+      }
+
+      // Finance
+      section(t("sec.finance"));
+      kv(t("field.ccBrand"), p.card.brand);
+      kv(t("field.ccNumber"), p.card.number);
+      kv(t("field.expire"), p.card.expire);
+      kv(t("field.cvv"), p.card.cvv);
+
+      y += 10;
+      ensureSpace(40);
+    });
+
+    ensureSpace(40);
+    doc.setFontSize(10); doc.setTextColor(120);
+    doc.text(t("app.disclaimer"), margin, pageH - margin, {maxWidth: pageW - margin*2});
+    doc.save('fake_profiles.pdf');
+  }
+
+  // Excel export function
+  function profilesToExcel(profiles) {
+    // Prepare data for Excel
+    const data = [];
+    
+    // Create header row
+    const header = [
+      "Country", "Street", "City", "Region", "Postal", "Phone", "Latitude", "Longitude",
+      "Full Name", "Gender", "Birthday", "Email", "Username", "Passport",
+      "Card Brand", "Card Number", "Expire", "CVV"
+    ];
+    
+    // Add custom field headers if any
+    if (profiles.length > 0 && profiles[0].person.custom) {
+      Object.keys(profiles[0].person.custom).forEach(field => {
+        header.push(field.charAt(0).toUpperCase() + field.slice(1));
+      });
+    }
+    
+    data.push(header);
+    
+    // Add data rows
+    profiles.forEach(p => {
+      const row = [
+        p.address.country, p.address.street, p.address.city, p.address.state, p.address.postal, p.address.phone,
+        p.address.latitude, p.address.longitude,
+        p.person.fullName, p.person.gender, p.person.birthday, p.person.email, p.person.username, p.person.passport,
+        p.card.brand, p.card.number, p.card.expire, p.card.cvv
+      ];
+      
+      // Add custom field values if any
+      if (p.person.custom) {
+        Object.values(p.person.custom).forEach(value => {
+          row.push(value);
+        });
+      }
+      
+      data.push(row);
+    });
+    
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Fake Profiles");
+    
+    // Save the file
+    XLSX.writeFile(wb, "fake_profiles.xlsx");
+  }
+
+  // SQL export function
+  function profilesToSQL(profiles) {
+    let sql = "CREATE TABLE profiles (\n";
+    sql += "id INT PRIMARY KEY,\n";
+    sql += "country VARCHAR(50),\n";
+    sql += "street VARCHAR(255),\n";
+    sql += "city VARCHAR(100),\n";
+    sql += "region VARCHAR(100),\n";
+    sql += "postal VARCHAR(20),\n";
+    sql += "phone VARCHAR(30),\n";
+    sql += "latitude DECIMAL(10, 6),\n";
+    sql += "longitude DECIMAL(10, 6),\n";
+    sql += "full_name VARCHAR(255),\n";
+    sql += "gender VARCHAR(20),\n";
+    sql += "birthday DATE,\n";
+    sql += "email VARCHAR(255),\n";
+    sql += "username VARCHAR(100),\n";
+    sql += "passport VARCHAR(50),\n";
+    sql += "card_brand VARCHAR(50),\n";
+    sql += "card_number VARCHAR(20),\n";
+    sql += "expire VARCHAR(10),\n";
+    sql += "cvv VARCHAR(10),\n";
+    sql += "avatar_data_url TEXT\n";
+    
+    // Add custom fields if any
+    if (profiles.length > 0 && profiles[0].person.custom) {
+      Object.keys(profiles[0].person.custom).forEach(field => {
+        sql += `, ${field} VARCHAR(255)\n`;
+      });
+    }
+    
+    sql += ");\n\n";
+    
+    // Insert statements
+    profiles.forEach((p, i) => {
+      sql += `INSERT INTO profiles VALUES (${i+1}, '${p.address.country}', '${p.address.street}', '${p.address.city}', '${p.address.state}', '${p.address.postal}', '${p.address.phone}', ${p.address.latitude}, ${p.address.longitude}, '${p.person.fullName}', '${p.person.gender}', '${p.person.birthday}', '${p.person.email}', '${p.person.username}', '${p.person.passport}', '${p.card.brand}', '${p.card.number}', '${p.card.expire}', '${p.card.cvv}', '${p.avatar}'`;
+      
+      // Add custom field values if any
+      if (p.person.custom) {
+        Object.values(p.person.custom).forEach(value => {
+          sql += `, '${value}'`;
+        });
+      }
+      
+      sql += ");\n";
+    });
+    
+    return sql;
+  }
+
+  // ------------------ Events & state ------------------
+  const resultsEl = document.getElementById("results");
+  const genBtn = document.getElementById("gen");
+  const copyBtn = document.getElementById("copy");
+  const dlJsonBtn = document.getElementById("download-json");
+  const dlCsvBtn = document.getElementById("download-csv");
+  const dlExcelBtn = document.getElementById("download-excel");
+  const dlSqlBtn = document.getElementById("download-sql");
+  const dlPdfBtn = document.getElementById("download-pdf");
+  const langSel = document.getElementById("lang");
+  const countrySel = document.getElementById("country");
+  const countSel = document.getElementById("count");
+  const brandSel = document.getElementById("brand");
+  const customFieldsInput = document.getElementById("customFields");
+  const darkModeToggle = document.getElementById("darkModeToggle");
+  const searchInput = document.getElementById("searchInput");
+  const genderFilter = document.getElementById("genderFilter");
+  const countryFilter = document.getElementById("countryFilter");
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBar = document.getElementById("progressBar");
+
+  let lastProfiles = [];
+  let lastCountry = countrySel.value;
+  let filteredProfiles = [];
+
+  // Dark mode toggle
+  darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    darkModeToggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    
+    // Save preference to localStorage
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+  });
+
+  // Load dark mode preference
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    darkModeToggle.textContent = '☀️';
+  }
+
+  function renderResults() {
+    resultsEl.innerHTML = "";
+    filteredProfiles.forEach((p, i) => {
+      resultsEl.appendChild(renderProfile(p, i+1, lastCountry));
+    });
+  }
+
+  // Batch processing with progress
+  async function generateBatchProfiles(count, country, brand, customFields) {
+    const batchSize = 10; // Process 10 profiles at a time
+    const profiles = [];
+    let processed = 0;
+    
+    // Show progress bar
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    
+    for (let i = 0; i < count; i += batchSize) {
+      const currentBatch = Math.min(batchSize, count - i);
+      const batchPromises = Array(currentBatch).fill().map(() => 
+        makeProfile(country, brand, customFields)
+      );
+      
+      const batchResults = await Promise.all(batchPromises);
+      profiles.push(...batchResults);
+      processed += currentBatch;
+      
+      // Update progress
+      progressBar.style.width = `${(processed / count) * 100}%`;
+      
+      // Small delay to show progress
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    // Hide progress bar
+    setTimeout(() => {
+      progressContainer.style.display = 'none';
+    }, 500);
+    
+    return profiles;
+  }
+
+  genBtn.addEventListener("click", async ()=>{
+    const count = parseInt(countSel.value,10);
+    const brand = brandSel.value;
+    const country = countrySel.value;
+    const customFields = customFieldsInput.value.split(',').map(f => f.trim()).filter(f => f);
+    
+    resultsEl.innerHTML = "";
+    lastProfiles = [];
+    lastCountry = country;
+    
+    // Generate profiles
+    if (count > 20) {
+      // Use batch processing for large numbers
+      lastProfiles = await generateBatchProfiles(count, country, brand, customFields);
+    } else {
+      // Generate directly for small numbers
+      for(let i=1;i<=count;i++){
+        const profile = makeProfile(country, brand, customFields);
+        lastProfiles.push(profile);
+      }
+    }
+    
+    // Apply initial filters
+    applyFilters();
+    
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+
+  copyBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    const text = profilesToJSON(lastProfiles);
+    navigator.clipboard.writeText(text).then(()=>{
+      copyBtn.innerText = currentLang==='bn' ? "কপি হয়েছে" : "Copied";
+      setTimeout(()=> copyBtn.setAttribute("data-i18n","buttons.copyJson") || (copyBtn.innerText=t("buttons.copyJson")), 1200);
+    });
+  });
+
+  dlJsonBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    const blob = new Blob([profilesToJSON(lastProfiles)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "fake_profiles.json";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  dlCsvBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    const blob = new Blob([profilesToCSV(lastProfiles)], {type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "fake_profiles.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  dlExcelBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    profilesToExcel(lastProfiles);
+  });
+
+  dlSqlBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    const blob = new Blob([profilesToSQL(lastProfiles)], {type:"text/sql"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "fake_profiles.sql";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  dlPdfBtn.addEventListener("click", ()=>{
+    if(!lastProfiles.length) return;
+    profilesToPDF(lastProfiles, currentLang, lastCountry);
+  });
+
+  langSel.addEventListener("change", ()=>{
+    currentLang = langSel.value;
+    applyI18n();
+    renderResults(); // re-render labels with new language
+  });
+
+  // Search and filter functionality
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const genderValue = genderFilter.value;
+    const countryValue = countryFilter.value;
+    
+    filteredProfiles = lastProfiles.filter(p => {
+      // Search by name or email
+      if (searchTerm && 
+          !p.person.fullName.toLowerCase().includes(searchTerm) && 
+          !p.person.email.toLowerCase().includes(searchTerm)) {
+        return false;
+      }
+      
+      // Filter by gender
+      if (genderValue && p.person.gender !== genderValue) {
+        return false;
+      }
+      
+      // Filter by country
+      if (countryValue && p.address.country !== countryValue) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    renderResults();
+  }
+
+  searchInput.addEventListener("input", applyFilters);
+  genderFilter.addEventListener("change", applyFilters);
+  countryFilter.addEventListener("change", applyFilters);
+
+  // Save generated profiles to localStorage
+  function saveToLocalStorage() {
+    if (lastProfiles.length > 0) {
+      localStorage.setItem('lastGeneratedProfiles', JSON.stringify({
+        profiles: lastProfiles,
+        country: lastCountry,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+
+  // Load from localStorage
+  function loadFromLocalStorage() {
+    const data = localStorage.getItem('lastGeneratedProfiles');
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        lastProfiles = parsed.profiles;
+        lastCountry = parsed.country;
+        filteredProfiles = [...lastProfiles];
+        renderResults();
+        
+        // Show notification
+        const notification = document.createElement('div');
+        notification.className = 'card';
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '1000';
+        notification.style.padding = '15px';
+        notification.style.maxWidth = '300px';
+        notification.innerHTML = `
+          <strong>${t('app.title')}</strong><br>
+          ${currentLang === 'bn' ? 'সর্বশেষ জেনারেট করা প্রোফাইল লোড হয়েছে' : 'Last generated profiles loaded'}
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      } catch (e) {
+        console.error('Failed to load profiles from localStorage', e);
+      }
+    }
+  }
+
+  // Auto-save to localStorage when profiles are generated
+  const originalGenBtnClick = genBtn.onclick;
+  genBtn.addEventListener('click', () => {
+    setTimeout(saveToLocalStorage, 1000); // Save after generation
+  });
+
+  // Load profiles from localStorage on page load
+  window.addEventListener('load', () => {
+    loadFromLocalStorage();
+  });
+
+  // Init
+  applyI18n();
+  genBtn.click(); // initial preview
+</script>
+</body>
+</html>
